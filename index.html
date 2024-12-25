@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>血糖管理助手</title>
+    <style>
+        :root {
+            --primary-color: #007AFF;
+            --success-color: #34C759;
+            --background-color: #F5F5F7;
+            --card-background: #FFFFFF;
+            --text-primary: #1D1D1F;
+            --text-secondary: #86868B;
+            --border-radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            color: var(--text-primary);
+            background-color: var(--background-color);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 32px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #E5E5E5;
+            border-radius: 8px;
+            font-size: 16px;
+            color: var(--text-primary);
+            background: #FAFAFA;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        button:hover {
+            background: #0066DD;
+            transform: translateY(-1px);
+        }
+
+        .number-input {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .number-input button {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .voice-input {
+            position: relative;
+        }
+
+        .voice-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .image-upload {
+            border: 2px dashed #E5E5E5;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .image-preview {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background-color: #000000;
+                --card-background: #1C1C1E;
+                --text-primary: #FFFFFF;
+                --text-secondary: #98989D;
+            }
+
+            input, select, textarea {
+                background: #2C2C2E;
+                border-color: #3A3A3C;
+                color: white;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h2>血糖记录</h2>
+            <form id="dataForm">
+                <div class="form-group">
+                    <label for="datetime">日期时间</label>
+                    <input type="datetime-local" id="datetime" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="bloodGlucose">血糖值 (mmol/L)</label>
+                    <div class="number-input">
+                        <button type="button" onclick="adjustGlucose(-0.1)">-</button>
+                        <input type="number" id="bloodGlucose" step="0.1" value="7.0" required>
+                        <button type="button" onclick="adjustGlucose(0.1)">+</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="mealType">用餐类型</label>
+                    <select id="mealType">
+                        <option value="空腹">空腹</option>
+                        <option value="早餐前">早餐前</option>
+                        <option value="早餐后">早餐后</option>
+                        <option value="午餐前">午餐前</option>
+                        <option value="午餐后">午餐后</option>
+                        <option value="晚餐前">晚餐前</option>
+                        <option value="晚餐后">晚餐后</option>
+                        <option value="睡前">睡前</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="food">饮食记录</label>
+                    <div class="voice-input">
+                        <textarea id="food" rows="3" placeholder="记录食物种类和大致份量"></textarea>
+                        <button type="button" class="voice-btn" onclick="startVoiceInput('food')">🎤</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="exercise">运动记录</label>
+                    <div class="image-upload">
+                        <input type="file" id="exerciseImage" accept="image/*" onchange="handleExerciseImage(event)">
+                        <img id="exercisePreview" class="image-preview" style="display: none;">
+                        <textarea id="exercise" rows="2" placeholder="运动分析结果将在此显示"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="sleep">睡眠记录</label>
+                    <div class="image-upload">
+                        <input type="file" id="sleepImage" accept="image/*" onchange="handleSleepImage(event)">
+                        <img id="sleepPreview" class="image-preview" style="display: none;">
+                        <textarea id="sleep" rows="2" placeholder="睡眠分析结果将在此显示"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">备注</label>
+                    <textarea id="notes" rows="2" placeholder="其他需要记录的信息"></textarea>
+                </div>
+
+                <button type="submit">保存记录</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 设置默认时间为当前时间
+        function updateDateTime() {
+            const now = new Date();
+            const datetime = now.toISOString().slice(0, 16);
+            document.getElementById('datetime').value = datetime;
+        }
+
+        // 调整血糖值
+        function adjustGlucose(delta) {
+            const input = document.getElementById('bloodGlucose');
+            let value = parseFloat(input.value) || 7.0;
+            value = Math.round((value + delta) * 10) / 10;
+            input.value = value.toFixed(1);
+        }
+
+        // 根据时间自动设置用餐类型
+        function updateMealType() {
+            const now = new Date();
+            const hour = now.getHours();
+            const select = document.getElementById('mealType');
+            
+            if (hour >= 5 && hour < 7) select.value = '早餐前';
+            else if (hour >= 7 && hour < 9) select.value = '早餐后';
+            else if (hour >= 11 && hour < 12) select.value = '午餐前';
+            else if (hour >= 12 && hour < 14) select.value = '午餐后';
+            else if (hour >= 17 && hour < 18) select.value = '晚餐前';
+            else if (hour >= 18 && hour < 20) select.value = '晚餐后';
+            else if (hour >= 21 || hour < 5) select.value = '睡前';
+            else select.value = '空腹';
+        }
+
+        // 语音输入
+        function startVoiceInput(targetId) {
+            if ('webkitSpeechRecognition' in window) {
+                const recognition = new webkitSpeechRecognition();
+                recognition.lang = 'zh-CN';
+                recognition.continuous = false;
+                recognition.interimResults = false;
+
+                recognition.onresult = function(event) {
+                    const text = event.results[0][0].transcript;
+                    document.getElementById(targetId).value = text;
+                };
+
+                recognition.start();
+            } else {
+                alert('您的浏览器不支持语音输入');
+            }
+        }
+
+        // 处理图片上传
+        function handleExerciseImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const preview = document.getElementById('exercisePreview');
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = 'block';
+            }
+        }
+
+        function handleSleepImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const preview = document.getElementById('sleepPreview');
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = 'block';
+            }
+        }
+
+        // 页面加载时初始化
+        window.addEventListener('load', function() {
+            updateDateTime();
+            updateMealType();
+            setInterval(updateDateTime, 60000); // 每分钟更新一次时间
+            setInterval(updateMealType, 60000); // 每分钟更新一次用餐类型
+        });
+
+        // 表单提交处理
+        document.getElementById('dataForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('记录已保存！');
+            // 这里可以添加数据保存逻辑
+        });
+    </script>
+</body>
+</html>
